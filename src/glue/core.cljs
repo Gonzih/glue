@@ -3,13 +3,16 @@
 
 (enable-console-print!)
 
+(def counter (glue/atom 0))
+(def todos (glue/atom ["hello"]))
+
 (glue/defcomponent
   :todo
   {:template "#todo"
-   :data (fn [] {:todos []
-                 :counter 0})
-   :methods {:add-random-todo (fn [this _] (glue/jsupdate this :todos #(conj % (str (rand-int 100)))))
-             :child-clicked (fn [this n] (glue/jsupdate-raw this :counter #(+ n %)))}})
+   :computed {:counter (fn [] @counter)
+              :todos (fn [] @todos)}
+   :methods {:add-random-todo (fn [this _] (swap! todos #(conj % (str (rand-int 100)))))
+             :child-clicked (fn [this n] (swap! counter inc))}})
 
 (glue/defcomponent
   :todo-item

@@ -1,6 +1,10 @@
 (ns glue.api
-    (:require [cljsjs.vue]
-              [clojure.string :as string]))
+  (:refer-clojure :exclude [atom])
+  (:require [cljsjs.vue]
+            [glue.gatom :as gatom]
+            [clojure.string :as string]))
+
+(def atom gatom/atom)
 
 (defn trace [i]
   (prn i)
@@ -16,7 +20,7 @@
   (kebab->camel (name k)))
 
 (defn adjust-data [data-fn]
-  (comp clj->js data-fn))
+  (comp clj->js (or data-fn (fn [] (js-obj)))))
 
 (defn adjust-method [method-fn]
   (fn [& args] (this-as dis (apply method-fn dis args))))
