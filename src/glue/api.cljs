@@ -8,18 +8,23 @@
 
 (defn trace [arg] (prn arg) arg)
 
-(s/def ::template string?)
+(s/def ::keyword keyword?)
+(s/def ::html-id (s/and string? #(string/starts-with? % "#")))
+(s/def ::template (s/or ::html-id string?))
 (s/def ::gatom #(instance? gatom/GAtom %))
-(s/def ::state-map (s/map-of keyword? ::gatom))
+(s/def ::state-map (s/map-of ::keyword ::gatom))
 (s/def ::state fn?)
-(s/def ::props (s/* keyword?))
-(s/def ::methods (s/map-of keyword? fn?))
-(s/def ::computed (s/map-of keyword? fn?))
+(s/def ::props (s/* ::keyword))
+(s/def ::methods (s/map-of ::keyword fn?))
+(s/def ::computed (s/map-of ::keyword fn?))
 (s/def ::data fn?)
-(s/def ::config (s/keys :req-un [::template]
-                        :opt-un [::props ::state ::computed ::methods ::data]))
+(s/def ::component-config (s/keys :req-un [::template]
+                                  :opt-un [::props ::state ::computed ::methods ::data]))
 
-(s/def ::converted-config ::config)
+(s/def ::el ::html-id)
+(s/def ::vue-config (s/keys :req-un [::el]))
+
+(s/def ::converted-config ::component-config)
 
 (defn valid-or-explain [spec item]
   (if (s/valid? spec item)
@@ -89,7 +94,7 @@
                kx))))
 
 (s/fdef convert-component-config
-        :args (s/cat :config ::config)
+        :args (s/cat :config ::component-config)
         :ret ::converted-config)
 
 (defn convert-component-config [{:keys [state data methods computed props]
@@ -99,7 +104,6 @@
                                      computed {}
                                      props []}
                                 :as config}]
-  {:pre [(valid-or-explain ::config config)]}
   (-> config
       (dissoc :state)
       (assoc :data     (convert-data data)
@@ -112,12 +116,15 @@
   (clj->js (convert-component-config config)))
 
 (defn emit [this label & args]
+  {:pre [(valid-or-explain ::keyword label)]}
   (apply js-invoke this "$emit" (name label) args))
 
 (defn defcomponent [n config]
+  {:pre [(valid-or-explain ::keyword n) (valid-or-explain ::component-config config)]}
   (js/Vue.component (name n) (config->vue config)))
 
 (defn vue [config]
+  {:pre [(valid-or-explain ::vue-config config)]}
   (js/Vue. (clj->js config)))
 
 (defn deffilter [n f]

@@ -21,8 +21,8 @@
   {:template "#todo-item"
    :props [:label]
    :state (fn [] {:counter (glue/atom 0)})
-   :computed {:counter-label (fn [this state] (str @(:counter state)
-                                                   " clicks"))}
+   :computed {:counter-label (fn [this state]
+                               (str @(:counter state) " clicks"))}
    :methods {:click-me (fn [this state _]
                          (swap! (:counter state) inc)
                          (glue/emit this :todo-click 1))}})
