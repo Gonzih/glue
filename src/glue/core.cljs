@@ -25,7 +25,7 @@
    :computed {:counter-label (fn [this state]
                                (str @(:counter state) " clicks"))}
    :methods {:click-me (fn [this state _]
-                         (prn (g/prop this :label))
+                         (println "Click happened on" (g/prop this :label))
                          (swap! (:counter state) inc)
                          (g/emit this :todo-click 1))}})
 
