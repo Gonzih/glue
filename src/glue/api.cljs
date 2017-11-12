@@ -1,8 +1,19 @@
 (ns glue.api
   (:refer-clojure :exclude [atom])
-  (:require [cljsjs.vue]
-            [glue.gatom :as gatom]
-            [clojure.string :as string]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string     :as string]
+            [cljsjs.vue]
+            [glue.gatom         :as gatom]))
+
+(s/def ::template string?)
+(s/def ::gatom #(instance? gatom/GAtom %))
+(s/def ::state (s/map-of keyword? ::gatom))
+(s/def ::props (s/* keyword?))
+(s/def ::methods (s/map-of keyword? fn?))
+(s/def ::computed (s/map-of keyword? fn?))
+(s/def ::data fn?)
+(s/def ::config (s/keys :req-un [::template]
+                        :opt-un [::props ::state ::computed ::methods ::data]))
 
 (def atom gatom/atom)
 
@@ -46,6 +57,12 @@
         (map (fn [[k a]] [(adjust-name k) #(clj->js @a)])
              state)))
 
+(defn validate-config [config]
+  (if (s/valid? ::config config)
+    true
+    (do (s/explain ::config config)
+        false)))
+
 (defn adjust-component-config [{:keys [state data methods computed props]
                                 :or {state {}
                                      data (fn [] {})
@@ -53,6 +70,7 @@
                                      computed {}
                                      props []}
                                 :as config}]
+  {:pre [(validate-config config)]}
   (-> config
       (dissoc state)
       (assoc :data     (adjust-data data)
