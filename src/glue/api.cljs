@@ -27,34 +27,34 @@
     #"-(\w)"
     (fn [matches] (string/upper-case (second matches)))))
 
-(defn adjust-name [k]
+(defn convert-name [k]
   (kebab->camel (name k)))
 
-(defn adjust-data [data-fn]
+(defn convert-data [data-fn]
   (comp clj->js data-fn))
 
-(defn adjust-method [method-fn state]
+(defn convert-method [method-fn state]
   (fn [& args] (this-as this (apply method-fn this state args))))
 
-(defn adjust-computed-prop [prop-fn state]
+(defn convert-computed-prop [prop-fn state]
   (fn [] (this-as this (clj->js (prop-fn this state)))))
 
-(defn adjust-methods [methods state]
+(defn convert-methods [methods state]
   (into {}
-        (map (fn [[k v]] [(adjust-name k) (adjust-method v state)])
+        (map (fn [[k v]] [(convert-name k) (convert-method v state)])
              methods)))
 
-(defn adjust-computed-props [computed-props state]
+(defn convert-computed-props [computed-props state]
   (into {}
-        (map (fn [[k v]] [(adjust-name k) (adjust-computed-prop v state)])
+        (map (fn [[k v]] [(convert-name k) (convert-computed-prop v state)])
              computed-props)))
 
-(defn adjust-props [props]
-  (map name props))
+(defn convert-props [props]
+  (map convert-name props))
 
 (defn generate-comp-properties-for-state [state]
   (into {}
-        (map (fn [[k a]] [(adjust-name k) #(clj->js @a)])
+        (map (fn [[k a]] [(convert-name k) #(clj->js @a)])
              state)))
 
 (defn validate-config [config]
@@ -63,7 +63,7 @@
     (do (s/explain ::config config)
         false)))
 
-(defn adjust-component-config [{:keys [state data methods computed props]
+(defn convert-component-config [{:keys [state data methods computed props]
                                 :or {state {}
                                      data (fn [] {})
                                      methods {}
@@ -72,15 +72,15 @@
                                 :as config}]
   {:pre [(validate-config config)]}
   (-> config
-      (dissoc state)
-      (assoc :data     (adjust-data data)
-             :methods  (adjust-methods methods state)
+      (dissoc :state)
+      (assoc :data     (convert-data data)
+             :methods  (convert-methods methods state)
              :computed (merge (generate-comp-properties-for-state state)
-                              (adjust-computed-props computed state))
-             :props    (adjust-props props))))
+                              (convert-computed-props computed state))
+             :props    (convert-props props))))
 
 (defn config->vue [config]
-  (clj->js (adjust-component-config config)))
+  (clj->js (convert-component-config config)))
 
 (defn emit [this label & args]
   (apply js-invoke this "$emit" (name label) args))
