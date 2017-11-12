@@ -1,13 +1,17 @@
 (ns glue.api
   (:refer-clojure :exclude [atom])
+  (:require-macros [cljs.core :refer [exists?]])
   (:require [clojure.spec.alpha :as s]
             [clojure.string     :as string]
             [cljsjs.vue]
             [glue.gatom         :as gatom]))
 
+(defn trace [arg] (prn arg) arg)
+
 (s/def ::template string?)
 (s/def ::gatom #(instance? gatom/GAtom %))
-(s/def ::state (s/map-of keyword? ::gatom))
+(s/def ::state-map (s/map-of keyword? ::gatom))
+(s/def ::state fn?)
 (s/def ::props (s/* keyword?))
 (s/def ::methods (s/map-of keyword? fn?))
 (s/def ::computed (s/map-of keyword? fn?))
@@ -15,11 +19,27 @@
 (s/def ::config (s/keys :req-un [::template]
                         :opt-un [::props ::state ::computed ::methods ::data]))
 
-(def atom gatom/atom)
+(defn valid-or-explain [spec item]
+  (if (s/valid? spec item)
+    true
+    (do (s/explain spec item)
+        false)))
 
-(defn trace [i]
-  (prn i)
-  i)
+(def atom gatom/atom)
+(def components-global-state (clojure.core/atom {}))
+
+(defn reset-state! [] (reset! components-global-state {}))
+
+(defn state-for [init-fn this]
+  (if (and (exists? this)
+           (exists? (.-_uid this)))
+    (let [id (.-_uid this)
+          state (get @components-global-state id)]
+      (if state
+        state
+        (let [initial-state (init-fn)]
+          (swap! components-global-state assoc id initial-state)
+          initial-state)))))
 
 (defn kebab->camel [s]
   (string/replace
@@ -33,35 +53,37 @@
 (defn convert-data [data-fn]
   (comp clj->js data-fn))
 
-(defn convert-method [method-fn state]
-  (fn [& args] (this-as this (apply method-fn this state args))))
+(defn convert-method [method-fn state-fn]
+  (fn [& args] (this-as this (apply method-fn this (state-for state-fn this) args))))
 
-(defn convert-computed-prop [prop-fn state]
-  (fn [] (this-as this (clj->js (prop-fn this state)))))
+(defn convert-computed-prop [prop-fn state-fn]
+  (fn [] (this-as this (clj->js (prop-fn this (state-for state-fn this))))))
 
-(defn convert-methods [methods state]
+(defn convert-methods [methods state-fn]
   (into {}
-        (map (fn [[k v]] [(convert-name k) (convert-method v state)])
+        (map (fn [[k v]] [(convert-name k) (convert-method v state-fn)])
              methods)))
 
-(defn convert-computed-props [computed-props state]
+(defn convert-computed-props [computed-props state-fn]
   (into {}
-        (map (fn [[k v]] [(convert-name k) (convert-computed-prop v state)])
+        (map (fn [[k v]] [(convert-name k) (convert-computed-prop v state-fn)])
              computed-props)))
 
 (defn convert-props [props]
   (map convert-name props))
 
-(defn generate-comp-properties-for-state [state]
-  (into {}
-        (map (fn [[k a]] [(convert-name k) #(clj->js @a)])
-             state)))
-
-(defn validate-config [config]
-  (if (s/valid? ::config config)
-    true
-    (do (s/explain ::config config)
-        false)))
+(defn generate-comp-properties-for-state [state-fn]
+  (let [kx (keys (state-fn))]
+    (into {}
+          (map (fn [k]
+                 [(convert-name k)
+                  (fn [] (this-as
+                           this
+                           (-> (state-for state-fn this)
+                               (get k)
+                               deref
+                               clj->js)))])
+               kx))))
 
 (defn convert-component-config [{:keys [state data methods computed props]
                                 :or {state {}
@@ -70,7 +92,7 @@
                                      computed {}
                                      props []}
                                 :as config}]
-  {:pre [(validate-config config)]}
+  {:pre [(valid-or-explain ::config config)]}
   (-> config
       (dissoc :state)
       (assoc :data     (convert-data data)

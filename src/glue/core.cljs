@@ -9,8 +9,8 @@
 (glue/defcomponent
   :todo
   {:template "#todo"
-   :state {:todos (glue/atom ["hello"])
-           :counter (glue/atom 0)}
+   :state (fn [] {:todos (glue/atom ["hello"])
+                  :counter (glue/atom 0)})
    :methods {:add-random-todo (fn [this state _]
                                 (swap! (:todos state) #(conj % (str (rand-int 100)))))
              :child-clicked (fn [this state n]
@@ -20,7 +20,7 @@
   :todo-item
   {:template "#todo-item"
    :props [:label]
-   :state {:counter (glue/atom 0)}
+   :state (fn [] {:counter (glue/atom 0)})
    :computed {:counter-label (fn [this state] (str @(:counter state)
                                                    " clicks"))}
    :methods {:click-me (fn [this state _]
