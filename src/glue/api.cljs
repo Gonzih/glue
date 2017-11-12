@@ -20,58 +20,55 @@
   (kebab->camel (name k)))
 
 (defn adjust-data [data-fn]
-  (comp clj->js (or data-fn (fn [] (js-obj)))))
+  (comp clj->js data-fn))
 
-(defn adjust-method [method-fn]
-  (fn [& args] (this-as dis (apply method-fn dis args))))
+(defn adjust-method [method-fn state]
+  (fn [& args] (this-as this (apply method-fn this state args))))
 
-(defn adjust-computed-prop [prop-fn]
-  (fn [] (this-as dis (clj->js (prop-fn dis)))))
+(defn adjust-computed-prop [prop-fn state]
+  (fn [] (this-as this (clj->js (prop-fn this state)))))
 
-(defn adjust-methods [methods]
-  (into {} (map (fn [[k v]] [(adjust-name k) (adjust-method v)]) methods)))
+(defn adjust-methods [methods state]
+  (into {}
+        (map (fn [[k v]] [(adjust-name k) (adjust-method v state)])
+             methods)))
 
-(defn adjust-computed-props [computed-props]
-  (into {} (map (fn [[k v]] [(adjust-name k) (adjust-computed-prop v)]) computed-props)))
+(defn adjust-computed-props [computed-props state]
+  (into {}
+        (map (fn [[k v]] [(adjust-name k) (adjust-computed-prop v state)])
+             computed-props)))
 
 (defn adjust-props [props]
   (map name props))
 
-(defn adjust-component-config [config]
+(defn generate-comp-properties-for-state [state]
+  (into {}
+        (map (fn [[k a]] [(adjust-name k) #(clj->js @a)])
+             state)))
+
+(defn adjust-component-config [{:keys [state data methods computed props]
+                                :or {state {}
+                                     data (fn [] {})
+                                     methods {}
+                                     computed {}
+                                     props []}
+                                :as config}]
   (-> config
-      (update :data adjust-data)
-      (update :methods adjust-methods)
-      (update :computed adjust-computed-props)
-      (update :props adjust-props)
-      clj->js))
+      (dissoc state)
+      (assoc :data     (adjust-data data)
+             :methods  (adjust-methods methods state)
+             :computed (merge (generate-comp-properties-for-state state)
+                              (adjust-computed-props computed state))
+             :props    (adjust-props props))))
 
-(defn jsget [target & keys]
-  (apply aget target (map name keys)))
-
-(defn jsset [target & keys]
-  (let [value (last keys)
-        kx (->> keys drop-last (map name))]
-    (apply aset target (concat kx [value]))))
-
-(defn jsupdate-raw [& args]
-  (let [f (last args)
-        get-args (drop-last args)
-        current-value (apply jsget get-args)
-        new-value (f current-value)
-        set-args (concat get-args [new-value])]
-    (apply jsset set-args)))
-
-(defn jsupdate [& args]
-  (let [f (last args)
-        conv-f (fn [input] (clj->js (f (js->clj input))))
-        keys (drop-last args)]
-    (apply jsupdate-raw (concat keys [conv-f]))))
+(defn config->vue [config]
+  (clj->js (adjust-component-config config)))
 
 (defn emit [this label & args]
   (apply js-invoke this "$emit" (name label) args))
 
 (defn defcomponent [n config]
-  (js/Vue.component (name n) (adjust-component-config config)))
+  (js/Vue.component (name n) (config->vue config)))
 
 (defn vue [config]
   (js/Vue. (clj->js config)))

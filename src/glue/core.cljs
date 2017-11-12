@@ -9,20 +9,22 @@
 (glue/defcomponent
   :todo
   {:template "#todo"
-   :computed {:counter (fn [] @counter)
-              :todos (fn [] @todos)}
-   :methods {:add-random-todo (fn [this _] (swap! todos #(conj % (str (rand-int 100)))))
-             :child-clicked (fn [this n] (swap! counter inc))}})
+   :state {:todos (glue/atom ["hello"])
+           :counter (glue/atom 0)}
+   :methods {:add-random-todo (fn [this state _]
+                                (swap! (:todos state) #(conj % (str (rand-int 100)))))
+             :child-clicked (fn [this state n]
+                              (swap! (:counter state) inc))}})
 
 (glue/defcomponent
   :todo-item
   {:template "#todo-item"
    :props [:label]
-   :data (fn [] {:counter 0})
-   :computed {:counter-label (fn [this] (str (glue/jsget this :counter)
-                                             " clicks"))}
-   :methods {:click-me (fn [this _]
-                         (glue/jsupdate-raw this :counter inc)
+   :state {:counter (glue/atom 0)}
+   :computed {:counter-label (fn [this state] (str @(:counter state)
+                                                   " clicks"))}
+   :methods {:click-me (fn [this state _]
+                         (swap! (:counter state) inc)
                          (glue/emit this :todo-click 1))}})
 
 (defn new-app [] (glue/vue {:el "#app"}))
