@@ -119,6 +119,9 @@
   {:pre [(valid-or-explain ::keyword label)]}
   (apply js-invoke this "$emit" (name label) args))
 
+(defn prop [this prop-name]
+  (this-as this (aget this "$props"(convert-name prop-name))))
+
 (defn defcomponent [n config]
   {:pre [(valid-or-explain ::keyword n) (valid-or-explain ::component-config config)]}
   (js/Vue.component (name n) (config->vue config)))

@@ -1,33 +1,34 @@
 (ns glue.core
-    (:require [glue.api :as glue]))
+    (:require [glue.api :as g]))
 
 (enable-console-print!)
 
-(def counter (glue/atom 0))
-(def todos (glue/atom ["hello"]))
+(def counter (g/atom 0))
+(def todos (g/atom ["hello"]))
 
-(glue/defcomponent
+(g/defcomponent
   :todo
   {:template "#todo"
-   :state (fn [] {:todos (glue/atom ["hello"])
-                  :counter (glue/atom 0)})
+   :state (fn [] {:todos (g/atom ["hello"])
+                  :counter (g/atom 0)})
    :methods {:add-random-todo (fn [this state _]
                                 (swap! (:todos state) #(conj % (str (rand-int 100)))))
              :child-clicked (fn [this state n]
                               (swap! (:counter state) inc))}})
 
-(glue/defcomponent
+(g/defcomponent
   :todo-item
   {:template "#todo-item"
    :props [:label]
-   :state (fn [] {:counter (glue/atom 0)})
+   :state (fn [] {:counter (g/atom 0)})
    :computed {:counter-label (fn [this state]
                                (str @(:counter state) " clicks"))}
    :methods {:click-me (fn [this state _]
+                         (prn (g/prop this :label))
                          (swap! (:counter state) inc)
-                         (glue/emit this :todo-click 1))}})
+                         (g/emit this :todo-click 1))}})
 
-(defonce app (glue/vue {:el "#app"}))
+(defonce app (g/vue {:el "#app"}))
 
 (defn on-js-reload []
-  (glue/reset-state!))
+  (g/reset-state!))
