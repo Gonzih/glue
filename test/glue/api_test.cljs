@@ -9,3 +9,8 @@
 (deftest adjust-name
   (testing :basic
     (is (= "clickMe" (glue/adjust-name :click-me)))))
+
+(deftest adjust-data
+  (testing :basic
+    (let [f (fn [] {:a "A"})]
+      (is (= "A" (.-a ((glue/adjust-data f))))))))
