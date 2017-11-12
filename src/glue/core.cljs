@@ -27,8 +27,7 @@
                          (swap! (:counter state) inc)
                          (glue/emit this :todo-click 1))}})
 
-(defn new-app [] (glue/vue {:el "#app"}))
+(defonce app (glue/vue {:el "#app"}))
 
-(def app (new-app))
-
-(defn on-js-reload [])
+(defn on-js-reload []
+  (glue/reset-state!))

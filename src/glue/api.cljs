@@ -1,10 +1,10 @@
 (ns glue.api
   (:refer-clojure :exclude [atom])
   (:require-macros [cljs.core :refer [exists?]])
-  (:require [clojure.spec.alpha :as s]
-            [clojure.string     :as string]
+  (:require [cljs.spec.alpha      :as s]
+            [clojure.string       :as string]
             [cljsjs.vue]
-            [glue.gatom         :as gatom]))
+            [glue.gatom           :as gatom]))
 
 (defn trace [arg] (prn arg) arg)
 
@@ -19,11 +19,12 @@
 (s/def ::config (s/keys :req-un [::template]
                         :opt-un [::props ::state ::computed ::methods ::data]))
 
+(s/def ::converted-config ::config)
+
 (defn valid-or-explain [spec item]
   (if (s/valid? spec item)
     true
-    (do (s/explain spec item)
-        false)))
+    (throw (js/Error. (s/explain-str spec item)))))
 
 (def atom gatom/atom)
 (def components-global-state (clojure.core/atom {}))
@@ -73,7 +74,9 @@
   (map convert-name props))
 
 (defn generate-comp-properties-for-state [state-fn]
-  (let [kx (keys (state-fn))]
+  (let [initial-state (state-fn)
+        kx (keys initial-state)]
+    (valid-or-explain ::state-map initial-state)
     (into {}
           (map (fn [k]
                  [(convert-name k)
@@ -84,6 +87,10 @@
                                deref
                                clj->js)))])
                kx))))
+
+(s/fdef convert-component-config
+        :args (s/cat :config ::config)
+        :ret ::converted-config)
 
 (defn convert-component-config [{:keys [state data methods computed props]
                                 :or {state {}
