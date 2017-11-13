@@ -4,9 +4,6 @@
 
 (enable-console-print!)
 
-(def counter (atom 0))
-(def todos (atom ["hello"]))
-
 (g/defcomponent
   :todo
   {:template "#todo"
