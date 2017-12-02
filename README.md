@@ -1,5 +1,11 @@
 # glue
 
+[![Downloads](https://jarkeeper.com/Gonzih/glue/downloads.svg)](https://jarkeeper.com/Gonzih/glue)
+[![Dependencies Status](http://jarkeeper.com/Gonzih/glue/status.svg)](https://jarkeeper.com/Gonzih/glue)
+[![Build Status](https://travis-ci.org/Gonzih/glue.svg?branch=master)](https://travis-ci.org/Gonzih/glue)
+[![License](http://img.shields.io/:license-mit-blue.svg)](https://github.com/Gonzih/glue/blob/master/LICENSE.md)
+[![Clojars Project](https://img.shields.io/clojars/v/glue)](http://clojars.org/glue)
+
 Trying to glue cljs and vue together.
 
 ## Overview
