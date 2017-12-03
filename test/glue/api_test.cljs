@@ -1,6 +1,6 @@
 (ns glue.api-test
    (:require [cljs.test :refer-macros [deftest is testing run-tests use-fixtures]]
-             [glue.api :as glue]))
+             [glue.core :as glue]))
 
 (defn bind [f o]
   (.bind f o))

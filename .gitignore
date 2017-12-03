@@ -11,3 +11,4 @@ pom.xml
 .lein-plugins/
 .repl
 .nrepl-port
+resources/test/compiled.js

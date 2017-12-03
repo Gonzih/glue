@@ -1,0 +1,5 @@
+jdk:
+  - openjdk8
+
+language: clojure
+script: lein cljsbuild once test && phantomjs resources/test/compiled.js
