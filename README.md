@@ -14,6 +14,10 @@ So far main idea is just to configure components via clojurescript.
 This is a small demo with figwheel so far.
 Might release a library later.
 
+## Demo
+
+Check out [the glue cljs demo app](https://github.com/Gonzih/glue-demo) for the usage example.
+
 ## Example
 
 ```html
