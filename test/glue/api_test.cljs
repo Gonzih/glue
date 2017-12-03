@@ -5,9 +5,10 @@
 (defn bind [f o]
   (.bind f o))
 
-(defn state-reset-fixture []
+(defn state-reset-fixture [f]
   (set! js/window._uid "uniqid")
-  (glue/reset-state!))
+  (glue/reset-state!)
+  (f))
 
 (use-fixtures :each state-reset-fixture)
 
