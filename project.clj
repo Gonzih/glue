@@ -1,4 +1,4 @@
-(defproject glue "0.1.2-SNAPSHOT"
+(defproject glue "0.1.3-SNAPSHOT"
   :description "FIXME: write this!"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -8,9 +8,9 @@
 
   :min-lein-version "2.7.1"
 
-  :dependencies [[org.clojure/clojure "1.9.0-RC1"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]
-                 [org.clojure/core.async  "0.3.443"]
+                 [org.clojure/core.async  "0.3.465"]
                  [org.clojure/spec.alpha "0.1.143"]
                  [cljsjs/vue "2.5.2-0"]]
 
