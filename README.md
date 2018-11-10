@@ -39,7 +39,7 @@ Check out [the glue cljs demo app](https://github.com/Gonzih/glue-demo) for the 
   (:require [glue.api :as g :refer [atom]]))
 
 (g/defcomponent
-  :samle-component
+  :sample-component
   {:template "#sample-template"
    :props [:label]
    :state (fn [] {:counter (atom 0)})
