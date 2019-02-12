@@ -54,6 +54,6 @@ Check out [the glue cljs demo app](https://github.com/Gonzih/glue-demo) for the 
 
 ## License
 
-Copyright © 2017 Max Gonzih gonzih @ gmail.com
+Copyright © 2017-2019 Max Gonzih gonzih @ gmail.com
 
 Distributed under the MIT license.
