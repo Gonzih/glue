@@ -63,4 +63,7 @@
   (testing :delete-state
     (let [config {:state (fn [] {:state-one (glue/atom :one)})
                   :template "#template-id"}]
-      (is (nil? (:state (glue/convert-component-config config)))))))
+      (is (nil? (:state (glue/convert-component-config config))))))
+  (testing :without-state
+    (let [config {:template "#template-id"}]
+      (glue/convert-component-config config))))

@@ -98,7 +98,7 @@
         :ret ::converted-config)
 
 (defn convert-component-config [{:keys [state data methods computed props]
-                                :or {state {}
+                                :or {state (fn [] {})
                                      data (fn [] {})
                                      methods {}
                                      computed {}
